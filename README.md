@@ -23,7 +23,7 @@ The following properties are supported in the properties file:-
 
 A Hamcrest "isSerializable" matcher is also included.
 
-MAVEN
+Maven
 =====
 
 Add the following dependancy to the pom.xml,
@@ -35,7 +35,7 @@ Add the following dependancy to the pom.xml,
         <scope>test</scope>
     </dependency>
 
-TO EXECUTE TESTS
+To Execute Tests
 ================
 Create a simple class in the test classpath, e.g.
 
