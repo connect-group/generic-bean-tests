@@ -31,7 +31,7 @@ Add the following dependancy to the pom.xml,
     <dependency>
         <groupId>com.connect-group</groupId>
         <artifactId>generic-bean-tests</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
         <scope>test</scope>
     </dependency>
 
