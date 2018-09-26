@@ -35,7 +35,7 @@ public class BeanLocatorTest {
 
         Set<BeanDefinition> beanDefs = locator.getBeansThatAreNotExcluded("key");
 
-        assertThat(beanDefs, hasSize(4));
+        assertThat(beanDefs, hasSize(8));
     }
 
     @Test

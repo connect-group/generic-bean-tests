@@ -1,5 +1,8 @@
 package com.connect_group.test.genericbean;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Map;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -59,18 +62,77 @@ public class IsSerializable extends TypeSafeMatcher<Class<?>> {
 
         assertImplementsSerializableInterface(classUnderTest);
 
-        int readWriteMethodCount = getReadWriteMethodCount(classUnderTest);
-        if (readWriteMethodCount == 0) {
-            assertAllFieldsMeetSerializationRequirements(classUnderTest, assumeSerializable);
-        } else if (readWriteMethodCount != 2) {
-            // if there was one method there must be both
-            StringBuilder sb = new StringBuilder().append("Must define all or none of the following methods: ")
-                    .append("private void writeObject(java.io.ObjectOutputStream out) throws IOException").append(" / ")
-                    .append("private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException");
+        // if JDK classes claim to be Serializable, we trust them
+        if (!classUnderTest.getPackage().getName().startsWith("java.")) {
 
-            throw new NotSerializableException(sb.toString());
+            int readWriteMethodCount = getReadWriteMethodCount(classUnderTest);
+
+            if (readWriteMethodCount == 0) {
+                assertAllFieldsMeetSerializationRequirements(classUnderTest, assumeSerializable);
+            } else if (readWriteMethodCount != 2) {
+                // if there was one method there must be both
+                StringBuilder sb = new StringBuilder()
+                    .append("Must define all or none of the following methods: ")
+                    .append(
+                        "private void writeObject(java.io.ObjectOutputStream out) throws IOException")
+                    .append(" / ")
+                    .append(
+                        "private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException");
+
+                throw new NotSerializableException(sb.toString());
+            }
         }
 
+    }
+
+    private void assertFieldTypeSerializable(Field fld, Type fieldType, boolean nested, LinkedHashSet<Class<?>> assumeSerializable) throws NotSerializableException {
+
+        Class rawType = null;
+        ParameterizedType parameterizedType = null;
+
+        if (fieldType instanceof Class) {
+            rawType = (Class) fieldType;
+        } else if (fieldType instanceof ParameterizedType) {
+            parameterizedType = (ParameterizedType) fieldType;
+            if (parameterizedType.getRawType() instanceof Class) {
+                rawType = (Class) parameterizedType.getRawType();
+            }
+        }
+
+        if (rawType != null && !rawType.isPrimitive()) {
+
+            // handle collections
+            if (Collection.class.isAssignableFrom(rawType) && parameterizedType != null) {
+                Type[] params = parameterizedType.getActualTypeArguments();
+                if (params.length != 1) {
+                    throw new IllegalStateException("Expected 1 type argument for Collection");
+                }
+                assertFieldTypeSerializable(fld, params[0], nested, assumeSerializable);
+            }
+
+            // handle maps
+            else if (Map.class.isAssignableFrom(rawType) && parameterizedType != null) {
+                Type[] params = parameterizedType.getActualTypeArguments();
+                if (params.length != 2) {
+                    throw new IllegalStateException("Expected 2 type arguments for Map");
+                }
+                assertFieldTypeSerializable(fld, params[0], nested, assumeSerializable);
+                assertFieldTypeSerializable(fld, params[1], nested, assumeSerializable);
+            }
+
+            // if it is not serializable we have an error
+            else {
+                try {
+                    assertSerializable(rawType, assumeSerializable);
+                } catch (NotSerializableException ex) {
+                    final String nestedStr = nested ? "NESTED " : "";
+                    throw new NotSerializableException(String.format(
+                        "%s field %s\n        of Serializable class %s\n        containing type %s\n        is not serializable, static, or transient",
+                        nestedStr, fld.getName(), fld.getDeclaringClass().getName(),
+                        rawType.getName()));
+                }
+            }
+        }
     }
 
     private void assertAllFieldsMeetSerializationRequirements(Class<?> classUnderTest, LinkedHashSet<Class<?>> assumeSerializable) throws NotSerializableException {
@@ -80,40 +142,12 @@ public class IsSerializable extends TypeSafeMatcher<Class<?>> {
 
             // check that all fields meet the serialization requirements
             for (Field fld : classUnderTest.getDeclaredFields()) {
-
 				/*
 				 * Transient and static fields do not need to be serialized so skip
 				 * them
 				 */
                 if (!Modifier.isTransient(fld.getModifiers()) && !Modifier.isStatic(fld.getModifiers())) {
-                    // check the field type
-                    Class<?> fieldType = fld.getType();
-                    // handle collections
-                    if (Collection.class.isAssignableFrom(fieldType)) {
-                        // extract the class type from the collection
-                        String sig = fld.toGenericString();
-                        String[] parts = sig.split("[\\<\\>]");
-                        if (parts.length == 3) {
-                            try {
-                                fieldType = Class.forName(parts[1]);
-                            } catch (ClassNotFoundException e) {
-                                fieldType = null;
-                            }
-                        }
-
-                    }
-                    // null and primitive types serialize
-                    if (fieldType != null && !fieldType.isPrimitive()) {
-                        // if it is not serializable we have an error
-                        try {
-                            assertSerializable(fieldType, assumeSerializable);
-                        } catch(NotSerializableException ex) {
-                            final String nestedStr = nested ? "NESTED ":"";
-                            throw new NotSerializableException(String.format("%s field %s\n        of Serializable class %s\n        containing type %s\n        is not serializable, static, or transient",
-                                    nestedStr, fld.getName(), classUnderTest.getName(),
-                                    fieldType.getName()));
-                        }
-                    }
+                    assertFieldTypeSerializable(fld, fld.getGenericType(), nested, assumeSerializable);
                 }
             }
         }
