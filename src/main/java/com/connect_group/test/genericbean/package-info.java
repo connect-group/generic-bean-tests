@@ -3,37 +3,44 @@
  * It depends on Spring to perform classpath scanning (in future this dependancy may be removed).
  *
  * It will,
- *  - Test that a bean is serializable
- *  - Test that where a bean has a matching getter and setter,
- *    calling the setter and then the getter results in the set value being returned.
+ *
+ *<ul>
+ *  <li>Test that a bean is serializable
+ *  <li>Test that where a bean has a matching getter and setter,
+ *      calling the setter and then the getter results in the set value being returned.
+ *</ul>
  *
  * The tests are configured by adding a file called GenericBeanTests.properties to the test classpath.
  * The following properties are supported in the properties file:-
  *
- *     packagesContainingBeans=com/landrover/lrdxwww/mvc/beans/,com/landrover/lrdxwww/mvc/component/
- *     serializableExcludeList=ImageSizeBeanHeightComparator,ImageSizeBeanWidthComparator
- *     getterAndSetterExcludeList=SomeClassName,SomeOtherClassName
- *     excludeClassNamesWhichMatchRegex=(Tests)\\z
- *     includeClassNamesWhichMatchRegex=(Bean)\\z
+ *<ul>
+ *     <li>packagesContainingBeans=com/landrover/lrdxwww/mvc/beans/,com/landrover/lrdxwww/mvc/component/
+ *     <li>serializableExcludeList=ImageSizeBeanHeightComparator,ImageSizeBeanWidthComparator
+ *     <li>getterAndSetterExcludeList=SomeClassName,SomeOtherClassName
+ *     <li>excludeClassNamesWhichMatchRegex=(Tests)\\z
+ *     <li>includeClassNamesWhichMatchRegex=(Bean)\\z
+ *</ul>
  *
  * A Hamcrest "isSerializable" matcher is also included.
  *
- * MAVEN:-
+ * <p>MAVEN:-
  *
- * Add the following dependancy to the pom.xml,
+ * <p>Add the following dependancy to the pom.xml,
  *
- * 		<dependency>
- * 		    <groupId>com.connect-group</groupId>
- * 		    <artifactId>generic-bean-tests</artifactId>
- * 		    <version>1.0-SNAPSHOT</version>
- * 		    <scope>test</scope>
- * 		</dependency>
+ * <pre>{@code
+ 		<dependency>
+ 		    <groupId>com.connect-group</groupId>
+ 		    <artifactId>generic-bean-tests</artifactId>
+ 		    <version>1.0-SNAPSHOT</version>
+ 		    <scope>test</scope>
+ 		</dependency>
+   }</pre>
+ * 
+ * <p>TO EXECUTE TESTS:-
  *
- * TO EXECUTE TESTS:-
+ * <p>Create a simple class in the test classpath, e.g.
  *
- * Create a simple class in the test classpath, e.g.
- *
- *     public class RunGenericBeanTests extends GenericBeanTestSuite {}
+ * <pre>    public class RunGenericBeanTests extends GenericBeanTestSuite {}</pre>
  *
  *
  */
