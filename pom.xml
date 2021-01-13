@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -13,7 +11,7 @@
 
     <groupId>com.connect-group</groupId>
     <artifactId>generic-bean-tests</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <name>generic-bean-tests</name>
@@ -32,6 +30,7 @@
         <url>scm:git:git@github.com:connect-group/generic-bean-tests.git</url>
         <connection>scm:git:git@github.com:connect-group/generic-bean-tests.git</connection>
         <developerConnection>scm:git:git@github.com:connect-group/generic-bean-tests.git</developerConnection>
+      <tag>HEAD</tag>
     </scm>
 
     <developers>
@@ -69,6 +68,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <nexus-staging-plugin.version>1.6.4</nexus-staging-plugin.version>
+        <nexus-staging-plugin.nexusUrl>https://oss.sonatype.org/</nexus-staging-plugin.nexusUrl>
     </properties>
 
     <dependencies>
@@ -101,7 +102,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+<!--
     <profiles>
         <profile>
             <id>releases</id>
@@ -110,7 +111,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.4</version>
+                        <version>${nexus-staging-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>default-deploy</id>
@@ -122,7 +123,7 @@
                         </executions>
                         <configuration>
                             <serverId>sonatype-nexus-releases</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <nexusUrl>${nexus-staging-plugin.nexusUrl}</nexusUrl>
                             <skipStaging>true</skipStaging>
                             <stagingProfileId>14b1865cd4eab2</stagingProfileId>
                         </configuration>
@@ -131,7 +132,7 @@
             </build>
         </profile>
     </profiles>
-
+-->
 
     <build>
         <plugins>
@@ -145,6 +146,55 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>staging</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+<!--
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                  <execution>
+                    <id>package-sources</id>
+                    <goals>
+                      <goal>jar</goal>
+                    </goals>
+                  </execution>
+               </executions>
+           </plugin>
+
+           <plugin>
+               <artifactId>maven-javadoc-plugin</artifactId>
+               <executions>
+                  <execution>
+                      <id>package-javadoc</id>
+                      <phase>package</phase>
+                      <goals>
+                          <goal>jar</goal>
+                      </goals>
+                  </execution>
+               </executions>
+           </plugin>
+
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -154,6 +204,18 @@
                      <tagNameFormat>v@{project.version}</tagNameFormat>
                      <autoVersionSubmodules>true</autoVersionSubmodules>
                      <releaseProfiles>releases</releaseProfiles>
+                </configuration>
+            </plugin>
+-->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${nexus-staging-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>sonatype-nexus-staging</serverId>
+                    <nexusUrl>${nexus-staging-plugin.nexusUrl}</nexusUrl>
+                    <stagingProfileId>14b1865cd4eab2</stagingProfileId>
                 </configuration>
             </plugin>
         </plugins>
